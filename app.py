@@ -29,7 +29,7 @@ presented in the video. Respons summary in Bahasa Indonesia.
 Transcript: """
 
 # List kata kunci kuliner
-keywords = ['food', 'food recipe', 'food ingredients', 'cookies', 'makanan', 'drnk', 'kitchen', 'cooking']
+keywords = ['food', 'recipe', 'ingredients', 'cook', 'bake', 'kitchen', 'culinary', 'chef', 'dish', 'meal', 'cuisine', 'makanan', 'resep', 'masak', 'dapur']
 
 # Function untuk memeriksa apakah transkrip relevan dengan kuliner
 def is_culinary_related(transcript_text, keywords):
@@ -51,22 +51,25 @@ def extract_transcript_details(youtube_video_url):
             st.error("Format URL YouTube tidak valid. Pastikan Anda memasukkan URL yang benar.")
             return None
 
-        try:
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
-        except TranscriptsDisabled:
-            st.warning("Transkripsi untuk video ini dinonaktifkan oleh pemilik konten.")
-            return None
-        except NoTranscriptFound:
-            try:
-                transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['id'])
-            except:
-                st.warning("Tidak ada transkripsi yang tersedia untuk video ini. Video mungkin tidak memiliki audio atau transkripsi.")
-                return None
+        languages = ['en', 'id', 'es', 'fr', 'de']  # Add more languages as needed
+        transcript = None
 
-        transcript = " ".join([item["text"] for item in transcript_list])
-        return transcript
+        for lang in languages:
+            try:
+                transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=[lang])
+                transcript = " ".join([item["text"] for item in transcript_list])
+                break
+            except (TranscriptsDisabled, NoTranscriptFound):
+                continue
+
+        if transcript:
+            return transcript
+        else:
+            st.warning("Tidak ada transkripsi yang tersedia dalam bahasa yang didukung.")
+            return None
+
     except Exception as e:
-        st.error("Terjadi kesalahan saat memproses video. Pastikan video memiliki audio dan transkripsi tersedia.")
+        st.error(f"Terjadi kesalahan saat memproses video: {str(e)}")
         return None
 
 # Function to generate summary using Gemini Pro (replace with actual model)
@@ -77,7 +80,7 @@ def generate_gemini_content(transcript_text, prompt):
     return response.text
 
 # Streamlit UI
-st.title("YouTube Culinary Video Summarizer - Chef Bot 🧑‍🍳")
+st.title("YouTubes Culinary Video Summarizer - Chef Bot 🧑‍🍳")
 youtube_link = st.text_input("Paste link youtube nya disini:")
 
 if youtube_link:
